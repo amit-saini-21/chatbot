@@ -37,17 +37,17 @@ def build_image_prompt(user_message: str, role: Dict, appearance: str, intent_ty
             "Use labels, arrows, and structured sections with high readability. "
             f"Visual style: {appearance}. "
             f"Tone: {tone}. Style: {style}. "
-            "flat vector infographic, high clarity, high contrast, legible typography, white background. "
-            "No human characters or faces. "
+            "flat vector infographic, high clarity, high contrast, clean spacing, legible typography, white background. "
+            "No human characters or faces, no portrait rendering. "
             f"{safety_constraints}."
         )
 
     return (
-        f"Portrait scene based on: {user_message}. "
+        f"Natural portrait scene based on: {user_message}. "
         f"Character appearance: {appearance}. "
         "same person, consistent face, consistent identity across sessions. "
         f"Role behavior style: {role_type}, tone {tone}, style {style}. "
-        "photorealistic, cinematic lighting, 85mm lens look, ultra detailed skin texture, "
-        "high dynamic range, sharp focus, 8k quality. "
+        "photorealistic, candid expression, natural pose, subtle emotion, realistic skin texture, "
+        "soft cinematic lighting, shallow depth of field, sharp focus on eyes, high detail, premium quality. "
         f"{safety_constraints}."
     )

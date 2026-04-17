@@ -8,13 +8,10 @@ import requests
 dotenv.load_dotenv()
 
 
-# HF_MODEL_URL = os.getenv(
-#     "HF_IMAGE_MODEL_URL",
-#     "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
-# )
-# HF_MODEL_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
-#HF_MODEL_URL = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
-HF_MODEL_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3.1-8B-Instruct"
+HF_MODEL_URL = os.getenv(
+    "HF_IMAGE_MODEL_URL",
+    "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
+)
 
 HF_TIMEOUT_SECONDS = int(os.getenv("HF_TIMEOUT_SECONDS", "80"))
 HF_MAX_RETRIES = int(os.getenv("HF_MAX_RETRIES", "3"))
