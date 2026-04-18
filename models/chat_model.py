@@ -101,8 +101,7 @@ def get_chat(chat_id, user_id=None):
         if user_object_id is None:
             return None
         query["user_id"] = user_object_id
-        print(query)
-    print(chats_collection.find_one(query))
+
     return _serialize_chat(chats_collection.find_one(query))
 
 
@@ -141,6 +140,69 @@ def get_last_messages(chat_id, limit=5, user_id=None):
 
     messages = chat.get("messages", [])
     return messages[-limit:]
+
+
+def get_chats_by_role_paginated(role_id, user_id=None, page=1, limit=10):
+    role_object_id = to_object_id(role_id)
+    if role_object_id is None:
+        return {"items": [], "total": 0, "page": 1, "limit": limit}
+
+    query = {"role_id": role_object_id}
+    if user_id is not None:
+        user_object_id = to_object_id(user_id)
+        if user_object_id is None:
+            return {"items": [], "total": 0, "page": 1, "limit": limit}
+        query["user_id"] = user_object_id
+
+    safe_page = max(1, int(page))
+    safe_limit = max(1, min(int(limit), 100))
+    skip = (safe_page - 1) * safe_limit
+
+    total = chats_collection.count_documents(query)
+    chats = list(
+        chats_collection.find(query)
+        .sort("created_at", -1)
+        .skip(skip)
+        .limit(safe_limit)
+    )
+
+    items = [
+        {
+            "id": str(chat["_id"]),
+            "title": chat.get("title", "New Chat"),
+            "role_id": str(chat["role_id"]),
+        }
+        for chat in chats
+    ]
+
+    return {
+        "items": items,
+        "total": total,
+        "page": safe_page,
+        "limit": safe_limit,
+    }
+
+
+def get_chat_messages_paginated(chat_id, user_id=None, page=1, limit=10):
+    chat = get_chat(chat_id, user_id=user_id)
+    if not chat:
+        return None
+
+    safe_page = max(1, int(page))
+    safe_limit = max(1, min(int(limit), 100))
+
+    messages = chat.get("messages", [])
+    total = len(messages)
+    start = max(0, total - (safe_page * safe_limit))
+    end = total - ((safe_page - 1) * safe_limit)
+    page_items = messages[start:end]
+
+    return {
+        "items": page_items,
+        "total": total,
+        "page": safe_page,
+        "limit": safe_limit,
+    }
 
 
 def delete_chat(chat_id, user_id=None):

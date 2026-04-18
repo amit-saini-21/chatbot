@@ -8,9 +8,29 @@ chat_bp = Blueprint("chat", __name__)
 @chat_bp.route('/api/roles/<role_id>/chats', methods=['GET'])
 @token_required
 def get_chats_list(current_user, role_id):
+    page_value = request.args.get("page", default="1")
+    limit_value = request.args.get("limit", default="10")
+
     try:
-        chat_list = chat_service.list_role_chats(current_user["_id"], role_id)
-        return jsonify({"chat_list": chat_list}), 200
+        page = max(1, int(page_value))
+    except (TypeError, ValueError):
+        page = 1
+
+    try:
+        limit = max(1, min(int(limit_value), 100))
+    except (TypeError, ValueError):
+        limit = 10
+
+    try:
+        paged = chat_service.list_role_chats_paginated(current_user["_id"], role_id, page=page, limit=limit)
+        return jsonify({
+            "chat_list": paged["items"],
+            "pagination": {
+                "page": paged["page"],
+                "limit": paged["limit"],
+                "total": paged["total"],
+            }
+        }), 200
     except LookupError as exc:
         return json_error(str(exc), 404)
     except Exception:
@@ -56,14 +76,34 @@ def update_chat_title(current_user, role_id, chat_id):
 @chat_bp.route('/api/chats/<chat_id>', methods=['GET'])
 @token_required
 def get_chat_messages(current_user, chat_id):
+    page_value = request.args.get("page", default="1")
     limit_value = request.args.get("limit", default="10")
+
+    try:
+        page = max(1, int(page_value))
+    except (TypeError, ValueError):
+        page = 1
+
     try:
         limit = max(1, min(int(limit_value), 100))
     except (TypeError, ValueError):
         limit = 10
+
     try:
-        messages = chat_service.get_chat_messages_for_user(current_user["_id"], chat_id, limit)
-        return jsonify({"messages": messages}), 200
+        paged = chat_service.get_chat_messages_for_user_paginated(
+            current_user["_id"],
+            chat_id,
+            page=page,
+            limit=limit,
+        )
+        return jsonify({
+            "messages": paged["items"],
+            "pagination": {
+                "page": paged["page"],
+                "limit": paged["limit"],
+                "total": paged["total"],
+            }
+        }), 200
     except LookupError as exc:
         return json_error(str(exc), 404)
     except Exception:
