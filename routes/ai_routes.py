@@ -20,7 +20,6 @@ def chat_with_ai(current_user):
 
     try:
         chat = chat_db.get_chat(chat_id, user_id=current_user["_id"])
-        print(chat)
         if not chat:
             return json_error("Chat not found", 404)
 
