@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from pymongo.errors import DuplicateKeyError
 from utils.hash import generate_password_hash, check_password_hash
 import re
 from utils import jwt_handler
@@ -40,9 +41,9 @@ def register():
     try:
         auth_db.create_user(email, hash_password, name, username)
         return jsonify({"message": "User registered successfully"}), 201
-    
+    except DuplicateKeyError:
+        return jsonify({"error": "An account with this email already exists"}), 409
     except Exception as e:
-        # print(f"Error registering user: {e}")
         return jsonify({"error": "An error occurred while registering the user"}), 500
     
 

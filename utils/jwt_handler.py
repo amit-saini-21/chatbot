@@ -5,21 +5,16 @@ import jwt
 from pymongo.errors import PyMongoError
 from models import user_model as db
 import datetime
+from utils.api_errors import json_error
 #db = models.user_repo
 
 
 def _jwt_error_response(message, details=None):
-    payload = {"error": message}
-    if current_app.debug and details:
-        payload["details"] = details
-    return jsonify(payload), 401
+    return json_error(message, 401, details)
 
 
 def _service_error_response(message, details=None):
-    payload = {"error": message}
-    if current_app.debug and details:
-        payload["details"] = details
-    return jsonify(payload), 503
+    return json_error(message, 503, details)
 
 def token_required(f):
     @wraps(f)

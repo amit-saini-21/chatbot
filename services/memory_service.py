@@ -1,5 +1,3 @@
-# services/memory_service.py
-
 import re
 
 from models import role_model as role_db
@@ -15,12 +13,29 @@ def should_save_memory(user_message):
         "note this",
         "store this",
         "keep this in mind",
-        "Save kar lena",
+        "save kar lena",
         "yaad rakhna",
         "puch lena",
         "yaad kar lena",
     ]
     return any(phrase in text for phrase in save_phrases)
+
+
+def _normalize_items(items):
+    if items is None:
+        return []
+    if isinstance(items, str):
+        items = [items]
+
+    cleaned = []
+    seen = set()
+    for item in items:
+        text = str(item).strip()
+        key = text.lower()
+        if text and key not in seen:
+            seen.add(key)
+            cleaned.append(text)
+    return cleaned
 
 
 def _extract_name_fact(text):
@@ -68,17 +83,9 @@ def extract_memories(user_message, save_requested=False):
             facts.append(fact)
 
     if save_requested:
-        explicit_fact = f"User asked to remember: {text[:180]}"
-        facts.append(explicit_fact)
+        facts.append(f"User asked to remember: {text[:180]}")
 
-    unique = []
-    seen = set()
-    for fact in facts:
-        key = fact.lower().strip()
-        if key and key not in seen:
-            seen.add(key)
-            unique.append(fact)
-    return unique
+    return _normalize_items(facts)
 
 
 def _profile_facts(user):
@@ -103,57 +110,48 @@ def _profile_facts(user):
     return facts
 
 
-def get_relevant_memory(role):
+def get_relevant_memory(role, limit=20):
     memory = role.get("memory", []) if role else []
-    return memory[-20:]
+    return list(memory)[-limit:]
 
 
-def build_memory_context(role, user):
+def build_memory_context(role, user, short_term_messages=None, short_term_limit=5):
     context = _profile_facts(user) + get_relevant_memory(role)
 
-    unique = []
-    seen = set()
-    for item in context:
-        key = str(item).lower().strip()
-        if key and key not in seen:
-            seen.add(key)
-            unique.append(str(item))
-    return unique[-25:]
+    if short_term_messages:
+        recent_messages = short_term_messages[-short_term_limit:]
+        chat_snippets = []
+        for message in recent_messages:
+            sender = message.get("sender", "user")
+            text = (message.get("text") or "").strip()
+            if text:
+                chat_snippets.append(f"{sender}: {text}")
+        if chat_snippets:
+            context.extend(chat_snippets)
+
+    return _normalize_items(context)[-25:]
 
 
-def update_memory(role_id, new_memories):
-    if not new_memories:
-        return
+def update_memory(role_id, new_memories, user_id=None):
+    normalized = _normalize_items(new_memories)
+    if not normalized:
+        return False
 
-    if isinstance(new_memories, str):
-        new_memories = [new_memories]
-
-    role = role_db.get_role(role_id)
+    role = role_db.get_role(role_id, user_id=user_id)
     if not role:
-        return
+        return False
 
-    existing = role.get("memory", []) or []
-    merged = existing + [m for m in new_memories if m]
-
-    unique = []
-    seen = set()
-    for item in merged:
-        normalized = str(item).strip()
-        key = normalized.lower()
-        if normalized and key not in seen:
-            seen.add(key)
-            unique.append(normalized)
-
-    role_db.update_memory(role_id, unique[-50:])
+    existing = _normalize_items(role.get("memory", []))
+    merged = _normalize_items(existing + normalized)
+    return role_db.update_memory(role_id, merged[-50:], user_id=user_id)
 
 
 def summarize_chat(messages):
     if not messages:
         return None
 
-    last_user_msgs = [m["text"] for m in messages if m.get("sender") == "user" and m.get("text")]
+    last_user_msgs = [m.get("text") for m in messages if m.get("sender") == "user" and m.get("text")]
     if not last_user_msgs:
         return None
 
-    summary = "User talked about: " + ", ".join(last_user_msgs[-2:])
-    return summary
+    return "User talked about: " + ", ".join(last_user_msgs[-2:])
