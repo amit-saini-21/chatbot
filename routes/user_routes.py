@@ -17,6 +17,7 @@ def get_profile(current_user):
             "profile": profile
         }), 200
     except Exception as e:
+        # print(f"Error fetching profile: {e}")
         return jsonify({"error": "An error occurred while fetching the profile"}), 500
     
 @user_bp.route('/api/user/profile', methods=['PUT'])
@@ -44,4 +45,5 @@ def update_profile(current_user):
         
         return jsonify({"message": "Profile updated successfully"}), 200
     except Exception as e:
+        # print(f"Error updating profile: {e}")
         return jsonify({"error": "An error occurred while updating the profile"}), 500

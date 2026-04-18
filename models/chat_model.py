@@ -14,7 +14,9 @@ def create_chat(role_id, title="New Chat"):
     except Exception as e:
         #print(f"Error creating chat: {e}")
         return "Error creating chat"
-    
+def get_role(role_id):
+    return chats_collection.find_one({"_id": ObjectId(role_id)})
+
 def update_chat_title(chat_id, new_title):
     try:
         chats_collection.update_one(
@@ -24,6 +26,7 @@ def update_chat_title(chat_id, new_title):
     except Exception as e:
        # print(f"Error updating chat title: {e}")
         return "Error updating chat title"
+    
 def get_chats_by_role(role_id):
     try:
         chats = list(chats_collection.find({"role_id": ObjectId(role_id)}))
@@ -67,3 +70,10 @@ def get_last_messages(chat_id, limit=5):
         return []
     messages = chat.get("messages", [])
     return messages[-limit:]
+
+def delete_chat(chat_id):
+    try:
+        chats_collection.delete_one({"_id": ObjectId(chat_id)})
+    except Exception as e:
+       # print(f"Error deleting chat: {e}")
+        return "Error deleting chat"

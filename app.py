@@ -1,5 +1,5 @@
 from config import Config
-from flask import Flask, jsonify
+from flask import Flask
 from routes.auth_routes import auth_bp
 from routes.other_routes import other_bp
 from routes.user_routes import user_bp

@@ -1,4 +1,4 @@
-from db.mongo import roles_collection
+from db.mongo import roles_collection, chats_collection
 from bson import ObjectId
 
 
@@ -43,22 +43,6 @@ def update_memory(role_id, memory):
     return 
 
 
-def get_role_appearance(role):
-    if not role:
-        return None
-    config = role.get("config", {}) or {}
-    return role.get("appearance") or config.get("appearance")
-
-
-def set_role_appearance(role_id, appearance):
-    if not appearance:
-        return
-
-    roles_collection.update_one(
-        {"_id": _to_object_id(role_id)},
-        {"$set": {"appearance": appearance, "config.appearance": appearance}},
-    )
-
 
 def get_all_roles(user_id):
     roles = list(roles_collection.find({"user_id": _to_object_id(user_id)}))
@@ -80,9 +64,13 @@ def update_role(role_id, config):
         # print(f"Error updating role: {e}")
         return "Error updating role"
     
+def role_exists(user_id, role_type):
+    return roles_collection.find_one({"user_id": _to_object_id(user_id), "role_type": role_type}) is not None
+
 def delete_role(role_id):
     try:
         roles_collection.delete_one({"_id": _to_object_id(role_id)})
+        chats_collection.delete_many({"role_id": _to_object_id(role_id)})
     except Exception as e:
         #print(f"Error deleting role: {e}")
         return "Error deleting role"

@@ -15,6 +15,10 @@ def should_save_memory(user_message):
         "note this",
         "store this",
         "keep this in mind",
+        "Save kar lena",
+        "yaad rakhna",
+        "puch lena",
+        "yaad kar lena",
     ]
     return any(phrase in text for phrase in save_phrases)
 

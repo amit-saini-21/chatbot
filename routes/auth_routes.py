@@ -42,6 +42,7 @@ def register():
         return jsonify({"message": "User registered successfully"}), 201
     
     except Exception as e:
+        # print(f"Error registering user: {e}")
         return jsonify({"error": "An error occurred while registering the user"}), 500
     
 

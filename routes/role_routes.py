@@ -51,7 +51,8 @@ def create_role(current_user):
     
     if role_type not in ALLOWED_ROLES:
         return jsonify({"error": f"Invalid role type. Allowed values are: {ALLOWED_ROLES}"}), 400
-    
+    if role_db.role_exists(current_user["_id"], role_type):
+        return jsonify({"error": f"You already have a role of type '{role_type}'"}), 400
     try:
         role_id = role_db.create_role(current_user["_id"], role_type, config)
         return jsonify({"message": "Role created successfully", "role_id": str(role_id)}), 201
